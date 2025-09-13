@@ -395,6 +395,7 @@
             display: flex;
             flex-direction: column;
             gap: var(--space-8);
+            max-width: 200px;
         }
 
         .legend__item {
@@ -709,7 +710,7 @@
             70% {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(255, 255, 255, 0);
             }
-            100% {
+            to {
                 box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 255, 255, 0);
             }
         }
@@ -1066,7 +1067,7 @@
                     "significance": "Marked the beginning of Mughal rule that would dominate India for over 300 years.",
                     "quiz": {
                         "question": "The First Battle of Panipat established which empire in India?",
-                        "options": ["British Empire", "Mughal Empire", "Maratha Empire", "Vijayanagara Empire"],
+                        "options": ["British Empire", "M Mughal Empire", "Maratha Empire", "Vijayanagara Empire"],
                         "answer": 1
                     }
                 },
@@ -1214,6 +1215,7 @@
         let selectedOption = null;
         let map = null;
         let markers = [];
+        let markerLayerGroup = L.layerGroup();
 
         // Initialize the application
         document.addEventListener('DOMContentLoaded', function() {
@@ -1248,8 +1250,10 @@
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             }).addTo(map);
             
+            // Add marker layer group to map
+            markerLayerGroup.addTo(map);
+            
             // Add a subtle India outline for better context
-            // This is a simplified polygon for India's shape
             const indiaOutline = L.polygon([
                 [37.5, 68], [37.5, 97], [6.5, 97], [6.5, 68]
             ], {
@@ -1359,15 +1363,15 @@
             console.log('Creating markers...');
             
             // Clear existing markers
-            markers.forEach(marker => map.removeLayer(marker));
+            markerLayerGroup.clearLayers();
             markers = [];
 
             allEvents.forEach((event, index) => {
                 const marker = createMarker(event);
                 markers.push(marker);
                 
-                // Add to map
-                marker.addTo(map);
+                // Add to marker layer group
+                markerLayerGroup.addLayer(marker);
             });
 
             console.log('Markers created:', markers.length);
@@ -1399,7 +1403,10 @@
             });
 
             // Create the marker
-            const marker = L.marker([event.latitude, event.longitude], { icon: icon });
+            const marker = L.marker([event.latitude, event.longitude], { 
+                icon: icon,
+                eventData: event // Store event data directly on marker
+            });
             
             // Bind popup with basic info
             marker.bindPopup(`
@@ -1424,16 +1431,15 @@
             console.log('Filtering by period:', period);
             currentFilter = period;
 
+            // Clear all markers
+            markerLayerGroup.clearLayers();
+
+            // Add back only the markers that match the filter
             markers.forEach(marker => {
-                // Get the event data from the marker (stored in a custom property)
-                const eventId = marker._icon.classList.contains('marker-ancient') ? 'ancient' : 
-                               marker._icon.classList.contains('marker-medieval') ? 'medieval' : 
-                               marker._icon.classList.contains('marker-modern') ? 'modern' : '';
+                const event = marker.options.eventData;
                 
-                if (period === 'all' || eventId === period) {
-                    map.addLayer(marker);
-                } else {
-                    map.removeLayer(marker);
+                if (period === 'all' || event.period === period) {
+                    markerLayerGroup.addLayer(marker);
                 }
             });
 
@@ -1468,47 +1474,39 @@
                 return;
             }
 
-            const matchingEvents = allEvents.filter(event =>
-                event.name.toLowerCase().includes(query) ||
-                event.location.toLowerCase().includes(query) ||
-                event.description.toLowerCase().includes(query)
-            );
+            // Clear all markers
+            markerLayerGroup.clearLayers();
 
-            console.log('Matching events:', matchingEvents.length);
+            const group = new L.featureGroup();
+            let foundMatches = false;
 
-            // Hide all markers first
+            // Add back only the markers that match the search
             markers.forEach(marker => {
-                map.removeLayer(marker);
+                const event = marker.options.eventData;
+                
+                if (event.name.toLowerCase().includes(query) ||
+                    event.location.toLowerCase().includes(query) ||
+                    event.description.toLowerCase().includes(query)) {
+                    
+                    markerLayerGroup.addLayer(marker);
+                    group.addLayer(marker);
+                    foundMatches = true;
+                    
+                    // Highlight with animation
+                    marker._icon.style.animation = 'markerPulse 1s ease-in-out 3';
+                }
             });
 
-            // Show matching markers and zoom to them
-            if (matchingEvents.length > 0) {
-                const group = new L.featureGroup();
-                
-                matchingEvents.forEach(event => {
-                    const marker = markers.find(m => {
-                        const latLng = m.getLatLng();
-                        return latLng.lat === event.latitude && latLng.lng === event.longitude;
-                    });
-                    
-                    if (marker) {
-                        map.addLayer(marker);
-                        group.addLayer(marker);
-                        
-                        // Highlight with animation
-                        marker._icon.style.animation = 'markerPulse 1s ease-in-out 3';
-                    }
-                });
-                
-                // Zoom to show all matching markers
+            // Zoom to show all matching markers if any were found
+            if (foundMatches) {
                 map.fitBounds(group.getBounds(), { padding: [50, 50] });
             }
 
             // Show notification
-            if (matchingEvents.length === 0) {
+            if (!foundMatches) {
                 showNotification('No events found for your search.');
             } else {
-                showNotification(`Found ${matchingEvents.length} event(s)`);
+                showNotification(`Found ${group.getLayers().length} event(s)`);
             }
         }
 
@@ -1530,9 +1528,12 @@
             }
 
             // Show all markers
+            markerLayerGroup.clearLayers();
             markers.forEach(marker => {
-                map.addLayer(marker);
-                marker._icon.style.animation = '';
+                markerLayerGroup.addLayer(marker);
+                if (marker._icon) {
+                    marker._icon.style.animation = '';
+                }
             });
 
             // Reset map view
