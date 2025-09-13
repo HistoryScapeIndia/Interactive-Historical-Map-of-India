@@ -1,0 +1,1781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Historical Map of India</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        :root {
+            /* Color Variables */
+            --color-white: rgba(255, 255, 255, 1);
+            --color-black: rgba(0, 0, 0, 1);
+            --color-cream-50: rgba(252, 252, 249, 1);
+            --color-cream-100: rgba(255, 255, 253, 1);
+            --color-gray-200: rgba(245, 245, 245, 1);
+            --color-gray-300: rgba(167, 169, 169, 1);
+            --color-gray-400: rgba(119, 124, 124, 1);
+            --color-slate-500: rgba(98, 108, 113, 1);
+            --color-brown-600: rgba(94, 82, 64, 1);
+            --color-charcoal-700: rgba(31, 33, 33, 1);
+            --color-charcoal-800: rgba(38, 40, 40, 1);
+            --color-slate-900: rgba(19, 52, 59, 1);
+            --color-teal-300: rgba(50, 184, 198, 1);
+            --color-teal-400: rgba(45, 166, 178, 1);
+            --color-teal-500: rgba(33, 128, 141, 1);
+            --color-teal-600: rgba(29, 116, 128, 1);
+            --color-teal-700: rgba(26, 104, 115, 1);
+            --color-teal-800: rgba(41, 150, 161, 1);
+            --color-red-400: rgba(255, 84, 89, 1);
+            --color-red-500: rgba(192, 21, 47, 1);
+            --color-orange-400: rgba(230, 129, 97, 1);
+            --color-orange-500: rgba(168, 75, 47, 1);
+
+            /* RGB versions for opacity control */
+            --color-brown-600-rgb: 94, 82, 64;
+            --color-teal-500-rgb: 33, 128, 141;
+            --color-slate-900-rgb: 19, 52, 59;
+            --color-slate-500-rgb: 98, 108, 113;
+            --color-red-500-rgb: 192, 21, 47;
+            --color-red-400-rgb: 255, 84, 89;
+            --color-orange-500-rgb: 168, 75, 47;
+            --color-orange-400-rgb: 230, 129, 97;
+
+            /* Background color tokens */
+            --color-bg-1: rgba(59, 130, 246, 0.08);
+            --color-bg-2: rgba(245, 158, 11, 0.08);
+            --color-bg-3: rgba(34, 197, 94, 0.08);
+            --color-bg-4: rgba(239, 68, 68, 0.08);
+            --color-bg-5: rgba(147, 51, 234, 0.08);
+            --color-bg-6: rgba(249, 115, 22, 0.08);
+            --color-bg-7: rgba(236, 72, 153, 0.08);
+            --color-bg-8: rgba(6, 182, 212, 0.08);
+
+            /* Semantic Color Tokens */
+            --color-background: var(--color-cream-50);
+            --color-surface: var(--color-cream-100);
+            --color-text: var(--color-slate-900);
+            --color-text-secondary: var(--color-slate-500);
+            --color-primary: var(--color-teal-500);
+            --color-primary-hover: var(--color-teal-600);
+            --color-primary-active: var(--color-teal-700);
+            --color-secondary: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-secondary-hover: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-secondary-active: rgba(var(--color-brown-600-rgb), 0.25);
+            --color-border: rgba(var(--color-brown-600-rgb), 0.2);
+            --color-btn-primary-text: var(--color-cream-50);
+            --color-card-border: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-card-border-inner: rgba(var(--color-brown-600-rgb), 0.12);
+            --color-error: var(--color-red-500);
+            --color-success: var(--color-teal-500);
+            --color-warning: var(--color-orange-500);
+            --color-info: var(--color-slate-500);
+            --color-focus-ring: rgba(var(--color-teal-500-rgb), 0.4);
+            --color-select-caret: rgba(var(--color-slate-900-rgb), 0.8);
+
+            /* Common style patterns */
+            --focus-ring: 0 0 0 3px var(--color-focus-ring);
+            --focus-outline: 2px solid var(--color-primary);
+            --status-bg-opacity: 0.15;
+            --status-border-opacity: 0.25;
+
+            /* Typography */
+            --font-family-base: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --font-size-xs: 11px;
+            --font-size-sm: 12px;
+            --font-size-base: 14px;
+            --font-size-md: 14px;
+            --font-size-lg: 16px;
+            --font-size-xl: 18px;
+            --font-size-2xl: 20px;
+            --font-size-3xl: 24px;
+            --font-size-4xl: 30px;
+            --font-weight-normal: 400;
+            --font-weight-medium: 500;
+            --font-weight-semibold: 550;
+            --font-weight-bold: 600;
+            --line-height-tight: 1.2;
+            --line-height-normal: 1.5;
+            --letter-spacing-tight: -0.01em;
+
+            /* Spacing */
+            --space-0: 0;
+            --space-1: 1px;
+            --space-2: 2px;
+            --space-4: 4px;
+            --space-6: 6px;
+            --space-8: 8px;
+            --space-10: 10px;
+            --space-12: 12px;
+            --space-16: 16px;
+            --space-20: 20px;
+            --space-24: 24px;
+            --space-32: 32px;
+
+            /* Border Radius */
+            --radius-sm: 6px;
+            --radius-base: 8px;
+            --radius-md: 10px;
+            --radius-lg: 12px;
+            --radius-full: 9999px;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+
+            /* Animation */
+            --duration-fast: 150ms;
+            --duration-normal: 250ms;
+            --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+            /* Layout */
+            --container-sm: 640px;
+            --container-md: 768px;
+            --container-lg: 1024px;
+            --container-xl: 1280px;
+
+            /* Custom properties for the application */
+            --accent-orange: #ff6b35;
+            --accent-blue: #4a90e2;
+            --accent-green: #50c878;
+            --marker-ancient: #8B4513;
+            --marker-medieval: #B8860B;
+            --marker-modern: #228B22;
+            --glassmorphism-bg: rgba(255, 255, 255, 0.1);
+            --glassmorphism-border: rgba(255, 255, 255, 0.2);
+            --panel-backdrop: rgba(0, 0, 0, 0.8);
+        }
+
+        /* Dark mode colors */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --color-background: var(--color-charcoal-700);
+                --color-surface: var(--color-charcoal-800);
+                --color-text: var(--color-gray-200);
+                --color-text-secondary: rgba(167, 169, 169, 0.7);
+                --color-primary: var(--color-teal-300);
+                --color-primary-hover: var(--color-teal-400);
+                --color-primary-active: var(--color-teal-800);
+                --color-secondary: rgba(119, 124, 124, 0.15);
+                --color-secondary-hover: rgba(119, 124, 124, 0.25);
+                --color-secondary-active: rgba(119, 124, 124, 0.3);
+                --color-border: rgba(119, 124, 124, 0.3);
+                --color-btn-primary-text: var(--color-slate-900);
+                --color-card-border: rgba(119, 124, 124, 0.2);
+                --color-card-border-inner: rgba(119, 124, 124, 0.15);
+                --color-error: var(--color-red-400);
+                --color-success: var(--color-teal-300);
+                --color-warning: var(--color-orange-400);
+                --color-info: var(--color-gray-300);
+                --color-focus-ring: rgba(50, 184, 198, 0.4);
+            }
+        }
+
+        /* Base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-family-base);
+            background: linear-gradient(135deg, var(--color-charcoal-700) 0%, var(--color-slate-900) 100%);
+            color: var(--color-text);
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            line-height: var(--line-height-normal);
+        }
+
+        .app-container {
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Header Styles */
+        .header {
+            background: var(--glassmorphism-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glassmorphism-border);
+            padding: var(--space-16) 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.6s var(--ease-standard);
+        }
+
+        .header .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: var(--space-16);
+            width: 100%;
+            max-width: var(--container-xl);
+            margin: 0 auto;
+            padding: 0 var(--space-16);
+        }
+
+        .header__title {
+            font-size: var(--font-size-3xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--accent-orange);
+            margin: 0;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header__controls {
+            display: flex;
+            align-items: center;
+            gap: var(--space-16);
+        }
+
+        .search-container {
+            display: flex;
+            gap: var(--space-8);
+            align-items: center;
+        }
+
+        .search-input {
+            min-width: 250px;
+            background: var(--glassmorphism-bg);
+            border: 1px solid var(--glassmorphism-border);
+            backdrop-filter: blur(10px);
+            transition: all var(--duration-normal) var(--ease-standard);
+            padding: var(--space-8) var(--space-12);
+            border-radius: var(--radius-base);
+            color: var(--color-text);
+            font-size: var(--font-size-md);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
+            outline: none;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8) var(--space-16);
+            border-radius: var(--radius-base);
+            font-size: var(--font-size-base);
+            font-weight: 500;
+            line-height: 1.5;
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+            border: none;
+            text-decoration: none;
+            position: relative;
+        }
+
+        .btn:focus-visible {
+            outline: none;
+            box-shadow: var(--focus-ring);
+        }
+
+        .btn--primary {
+            background: var(--accent-blue);
+            color: var(--color-btn-primary-text);
+        }
+
+        .btn--primary:hover {
+            background: #3a7bc8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.4);
+        }
+
+        .btn--outline {
+            background: var(--glassmorphism-bg);
+            border: 1px solid var(--glassmorphism-border);
+            color: var(--color-text);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn--outline:hover {
+            border-color: var(--accent-orange);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+        }
+
+        .btn--outline.active {
+            background: var(--accent-orange);
+            border-color: var(--accent-orange);
+            color: var(--color-charcoal-800);
+        }
+
+        .btn--secondary {
+            background: var(--glassmorphism-bg);
+            border: 1px solid var(--glassmorphism-border);
+            backdrop-filter: blur(10px);
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .btn--secondary:hover {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--color-charcoal-800);
+            transform: translateY(-2px);
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: var(--space-32) 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: var(--container-xl);
+            margin: 0 auto;
+            padding: 0 var(--space-16);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-32);
+            flex-wrap: wrap;
+            gap: var(--space-16);
+        }
+
+        .period-filters {
+            display: flex;
+            gap: var(--space-12);
+            flex-wrap: wrap;
+        }
+
+        /* Map Section */
+        .map-section {
+            margin-bottom: var(--space-32);
+        }
+
+        .map-container {
+            position: relative;
+            background: var(--color-surface);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            height: 500px;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: var(--space-20);
+            right: var(--space-20);
+            background: var(--glassmorphism-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glassmorphism-border);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .legend__title {
+            font-size: var(--font-size-lg);
+            font-weight: var(--font-weight-semibold);
+            margin: 0 0 var(--space-12) 0;
+            color: var(--accent-orange);
+        }
+
+        .legend__items {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-8);
+        }
+
+        .legend__item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-8);
+            font-size: var(--font-size-sm);
+        }
+
+        .legend__marker {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend__marker--ancient {
+            background: var(--marker-ancient);
+        }
+
+        .legend__marker--medieval {
+            background: var(--marker-medieval);
+        }
+
+        .legend__marker--modern {
+            background: var(--marker-modern);
+        }
+
+        /* Timeline Section */
+        .timeline-section {
+            animation: fadeInUp 1s var(--ease-standard);
+        }
+
+        .timeline-container {
+            background: var(--glassmorphism-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glassmorphism-border);
+            border-radius: var(--radius-lg);
+            padding: var(--space-24);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline__title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-semibold);
+            margin: 0 0 var(--space-20) 0;
+            color: var(--accent-blue);
+            text-align: center;
+        }
+
+        .timeline-slider {
+            position: relative;
+        }
+
+        .timeline-input {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: var(--color-border);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+        }
+
+        .timeline-input::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .timeline-input::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 4px 12px rgba(255, 107, 53, 0.5);
+        }
+
+        .timeline-input::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-orange);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .timeline-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--space-12);
+            font-size: var(--font-size-sm);
+            color: var(--color-text-secondary);
+        }
+
+        /* Event Panel */
+        .event-panel {
+            position: fixed;
+            top: 0;
+            right: -400px;
+            width: 400px;
+            height: 100vh;
+            background: var(--panel-backdrop);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            transition: right var(--duration-normal) var(--ease-standard);
+            overflow-y: auto;
+        }
+
+        .event-panel.visible {
+            right: 0;
+        }
+
+        .event-panel__content {
+            background: var(--color-surface);
+            height: 100%;
+            position: relative;
+            overflow-y: auto;
+        }
+
+        .event-panel__close {
+            position: absolute;
+            top: var(--space-16);
+            right: var(--space-16);
+            background: none;
+            border: none;
+            font-size: var(--font-size-3xl);
+            color: var(--color-text);
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all var(--duration-normal) var(--ease-standard);
+            z-index: 10;
+        }
+
+        .event-panel__close:hover {
+            background: var(--color-error);
+            transform: rotate(90deg);
+        }
+
+        .event-panel__header {
+            padding: var(--space-24);
+            background: linear-gradient(135deg, var(--accent-orange), var(--accent-blue));
+            color: white;
+        }
+
+        .event-panel__title {
+            font-size: var(--font-size-2xl);
+            font-weight: var(--font-weight-bold);
+            margin: 0 0 var(--space-8) 0;
+            padding-right: var(--space-32);
+        }
+
+        .event-panel__meta {
+            display: flex;
+            gap: var(--space-16);
+            font-size: var(--font-size-sm);
+            opacity: 0.9;
+        }
+
+        .event-panel__body {
+            padding: var(--space-24);
+        }
+
+        .event-panel__image {
+            margin-bottom: var(--space-20);
+            border-radius: var(--radius-base);
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-panel__image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .event-panel__description,
+        .event-panel__significance,
+        .event-panel__quiz {
+            margin-bottom: var(--space-24);
+        }
+
+        .event-panel__description h3,
+        .event-panel__significance h3,
+        .event-panel__quiz h3 {
+            color: var(--accent-orange);
+            font-size: var(--font-size-lg);
+            margin: 0 0 var(--space-12) 0;
+        }
+
+        /* Quiz Styles */
+        .quiz-container {
+            background: var(--color-bg-1);
+            border-radius: var(--radius-base);
+            padding: var(--space-16);
+        }
+
+        .quiz-question {
+            font-weight: var(--font-weight-medium);
+            margin-bottom: var(--space-16);
+        }
+
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-8);
+            margin-bottom: var(--space-16);
+        }
+
+        .quiz-option {
+            padding: var(--space-12);
+            background: var(--color-surface);
+            border: 1px solid var(--color-border);
+            border-radius: var(--radius-base);
+            cursor: pointer;
+            transition: all var(--duration-normal) var(--ease-standard);
+        }
+
+        .quiz-option:hover {
+            border-color: var(--accent-blue);
+            background: var(--color-bg-2);
+        }
+
+        .quiz-option.selected {
+            border-color: var(--accent-orange);
+            background: var(--color-bg-5);
+        }
+
+        .quiz-option.correct {
+            border-color: var(--accent-green);
+            background: var(--color-bg-3);
+        }
+
+        .quiz-option.incorrect {
+            border-color: var(--color-error);
+            background: var(--color-bg-4);
+        }
+
+        .quiz-result {
+            padding: var(--space-12);
+            border-radius: var(--radius-base);
+            font-weight: var(--font-weight-medium);
+            text-align: center;
+        }
+
+        .quiz-result.correct {
+            background: var(--color-bg-3);
+            color: var(--accent-green);
+        }
+
+        .quiz-result.incorrect {
+            background: var(--color-bg-4);
+            color: var(--color-error);
+        }
+
+        /* Loading Indicator */
+        .loading-indicator {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 107, 53, 0.3);
+            border-top: 4px solid var(--accent-orange);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes markerPulse {
+            0% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 255, 255, 0.7);
+            }
+            70% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 10px rgba(255, 255, 255, 0);
+            }
+            100% {
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .visible {
+            display: block !important;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header .container {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .header__title {
+                font-size: var(--font-size-2xl);
+            }
+
+            .search-input {
+                min-width: 200px;
+            }
+
+            .filter-section {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .period-filters {
+                justify-content: center;
+            }
+
+            .map-container {
+                height: 400px;
+            }
+
+            .legend {
+                position: relative;
+                top: auto;
+                right: auto;
+                margin-top: var(--space-16);
+                bottom: auto;
+            }
+
+            .event-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .timeline-labels {
+                font-size: var(--font-size-xs);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .main-content {
+                padding: var(--space-16) 0;
+            }
+
+            .period-filters {
+                flex-direction: column;
+            }
+
+            .period-btn {
+                width: 100%;
+            }
+
+            .map-container {
+                height: 300px;
+            }
+        }
+
+        /* Leaflet customizations */
+        .leaflet-popup-content-wrapper {
+            border-radius: var(--radius-base);
+            background: var(--color-surface);
+            color: var(--color-text);
+        }
+
+        .leaflet-popup-tip {
+            background: var(--color-surface);
+        }
+
+        .leaflet-container a.leaflet-popup-close-button {
+            color: var(--color-text);
+            padding: 8px;
+        }
+
+        .leaflet-container a.leaflet-popup-close-button:hover {
+            color: var(--color-error);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1 class="header__title">Historical India Explorer</h1>
+                <div class="header__controls">
+                    <div class="search-container">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search events or locations...">
+                        <button class="btn btn--primary" id="searchBtn">Search</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <!-- Period Filter Controls -->
+                <section class="filter-section">
+                    <div class="period-filters">
+                        <button class="btn btn--outline period-btn active" data-period="all">All Periods</button>
+                        <button class="btn btn--outline period-btn" data-period="ancient">Ancient India</button>
+                        <button class="btn btn--outline period-btn" data-period="medieval">Medieval India</button>
+                        <button class="btn btn--outline period-btn" data-period="modern">Modern India</button>
+                    </div>
+                    <button class="btn btn--secondary reset-btn" id="resetView">Reset View</button>
+                </section>
+
+                <!-- Map Section -->
+                <section class="map-section">
+                    <div class="map-container">
+                        <div id="map"></div>
+                        
+                        <!-- Legend -->
+                        <div class="legend">
+                            <h3 class="legend__title">Legend</h3>
+                            <div class="legend__items">
+                                <div class="legend__item">
+                                    <span class="legend__marker legend__marker--ancient"></span>
+                                    <span>Ancient (3300 BCE - 700 CE)</span>
+                                </div>
+                                <div class="legend__item">
+                                    <span class="legend__marker legend__marker--medieval"></span>
+                                    <span>Medieval (700 - 1857 CE)</span>
+                                </div>
+                                <div class="legend__item">
+                                    <span class="legend__marker legend__marker--modern"></span>
+                                    <span>Modern (1857 - 1947 CE)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Timeline Section -->
+                <section class="timeline-section">
+                    <div class="timeline-container">
+                        <h3 class="timeline__title">Historical Timeline</h3>
+                        <div class="timeline-controls">
+                            <div class="timeline-slider">
+                                <input type="range" id="timelineRange" min="0" max="100" value="100" class="timeline-input">
+                                <div class="timeline-labels">
+                                    <span>3300 BCE</span>
+                                    <span>700 CE</span>
+                                    <span>1857 CE</span>
+                                    <span>1947 CE</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+
+        <!-- Event Details Panel -->
+        <div class="event-panel hidden" id="eventPanel">
+            <div class="event-panel__content">
+                <button class="event-panel__close" id="closePanel">&times;</button>
+                
+                <div class="event-panel__header">
+                    <h2 class="event-panel__title" id="eventTitle"></h2>
+                    <div class="event-panel__meta">
+                        <span class="event-panel__year" id="eventYear"></span>
+                        <span class="event-panel__location" id="eventLocation"></span>
+                    </div>
+                </div>
+
+                <div class="event-panel__body">
+                    <div class="event-panel__image" id="eventImage"></div>
+                    
+                    <div class="event-panel__description">
+                        <h3>Description</h3>
+                        <p id="eventDescription"></p>
+                    </div>
+
+                    <div class="event-panel__significance">
+                        <h3>Historical Significance</h3>
+                        <p id="eventSignificance"></p>
+                    </div>
+
+                    <div class="event-panel__quiz" id="eventQuiz">
+                        <h3>Test Your Knowledge</h3>
+                        <div class="quiz-container">
+                            <p class="quiz-question" id="quizQuestion"></p>
+                            <div class="quiz-options" id="quizOptions"></div>
+                            <button class="btn btn--primary quiz-submit hidden" id="quizSubmit">Submit Answer</button>
+                            <div class="quiz-result hidden" id="quizResult"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading-indicator hidden" id="loadingIndicator">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Historical data from the provided JSON
+        const historicalData = {
+            "periods": [
+                {
+                    "id": "ancient",
+                    "name": "Ancient India",
+                    "timeRange": "3300 BCE - 700 CE",
+                    "color": "#8B4513"
+                },
+                {
+                    "id": "medieval",
+                    "name": "Medieval India",
+                    "timeRange": "700 CE - 1857 CE",
+                    "color": "#B8860B"
+                },
+                {
+                    "id": "modern",
+                    "name": "Modern India",
+                    "timeRange": "1857 CE - 1947 CE",
+                    "color": "#228B22"
+                }
+            ],
+            "events": [
+                {
+                    "id": "indus_valley",
+                    "name": "Indus Valley Civilization",
+                    "period": "ancient",
+                    "year": "2500-1750 BCE",
+                    "location": "Harappa and Mohenjo-daro",
+                    "latitude": 27.3753,
+                    "longitude": 68.1378,
+                    "description": "One of the world's oldest civilizations, known for advanced urban planning, drainage systems, and sophisticated trade networks.",
+                    "significance": "Represents the earliest known urban civilization in the Indian subcontinent with remarkable city planning.",
+                    "quiz": {
+                        "question": "What was the Indus Valley Civilization most famous for?",
+                        "options": ["Advanced urban planning", "Great wars", "Religious temples", "Mountain settlements"],
+                        "answer": 0
+                    }
+                },
+                {
+                    "id": "battle_ten_kings",
+                    "name": "Battle of Ten Kings",
+                    "period": "ancient",
+                    "year": "~14th century BCE",
+                    "location": "River Ravi (ancient Parushni), Punjab",
+                    "latitude": 31.6340,
+                    "longitude": 74.8723,
+                    "description": "Legendary battle mentioned in the Rigveda between Bharata tribal king and alliance of ten tribes.",
+                    "significance": "One of the earliest recorded battles in Indian history, mentioned in Vedic texts.",
+                    "quiz": {
+                        "question": "The Battle of Ten Kings is mentioned in which ancient text?",
+                        "options": ["Mahabharata", "Ramayana", "Rigveda", "Upanishads"],
+                        "answer": 2
+                    }
+                },
+                {
+                    "id": "kalinga_war",
+                    "name": "Kalinga War",
+                    "period": "ancient",
+                    "year": "261 BCE",
+                    "location": "Dhauli, Odisha",
+                    "latitude": 20.1923,
+                    "longitude": 85.6501,
+                    "description": "Major war fought between Emperor Ashoka and the kingdom of Kalinga. Ashoka's victory led to his conversion to Buddhism.",
+                    "significance": "Turning point that led Emperor Ashoka to embrace Buddhism and non-violence, profoundly influencing Indian philosophy.",
+                    "quiz": {
+                        "question": "What major change did Emperor Ashoka undergo after the Kalinga War?",
+                        "options": ["Became more aggressive", "Converted to Buddhism", "Abdicated the throne", "Started conquering more territories"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "alexander_porus",
+                    "name": "Battle of Hydaspes",
+                    "period": "ancient",
+                    "year": "326 BCE",
+                    "location": "Near Jhelum River, Punjab",
+                    "latitude": 32.9328,
+                    "longitude": 73.7296,
+                    "description": "Alexander the Great's forces defeated King Porus, but Porus's brave resistance impressed Alexander.",
+                    "significance": "Marked the easternmost advance of Alexander's conquests and showcased Indian military prowess.",
+                    "quiz": {
+                        "question": "Who was the Indian king who fought against Alexander the Great?",
+                        "options": ["Chandragupta", "Porus", "Ashoka", "Harsha"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "first_battle_tarain",
+                    "name": "First Battle of Tarain",
+                    "period": "medieval",
+                    "year": "1191 CE",
+                    "location": "Taraori, Haryana",
+                    "latitude": 29.4504,
+                    "longitude": 76.9367,
+                    "description": "Prithviraj Chauhan defeated Muhammad Ghori, displaying Rajput military strength.",
+                    "significance": "Last major victory of Hindu kingdoms against Islamic invasions before centuries of Muslim rule.",
+                    "quiz": {
+                        "question": "Who won the First Battle of Tarain?",
+                        "options": ["Muhammad Ghori", "Prithviraj Chauhan", "Akbar", "Babur"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "second_battle_tarain",
+                    "name": "Second Battle of Tarain",
+                    "period": "medieval",
+                    "year": "1192 CE",
+                    "location": "Taraori, Haryana",
+                    "latitude": 29.4504,
+                    "longitude": 76.9367,
+                    "description": "Muhammad Ghori defeated Prithviraj Chauhan, laying foundation for centuries of Muslim rule in North India.",
+                    "significance": "Established Muslim dominance in North India and ended the reign of the last Hindu emperor of Delhi.",
+                    "quiz": {
+                        "question": "The Second Battle of Tarain led to which major historical change?",
+                        "options": ["End of Mughal rule", "Beginning of British rule", "Start of Muslim rule in North India", "Formation of Maratha empire"],
+                        "answer": 2
+                    }
+                },
+                {
+                    "id": "first_battle_panipat",
+                    "name": "First Battle of Panipat",
+                    "period": "medieval",
+                    "year": "1526 CE",
+                    "location": "Panipat, Haryana",
+                    "latitude": 29.3909,
+                    "longitude": 76.9635,
+                    "description": "Babur defeated Ibrahim Lodi, establishing the Mughal Empire in India.",
+                    "significance": "Marked the beginning of Mughal rule that would dominate India for over 300 years.",
+                    "quiz": {
+                        "question": "The First Battle of Panipat established which empire in India?",
+                        "options": ["British Empire", "Mughal Empire", "Maratha Empire", "Vijayanagara Empire"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "battle_plassey",
+                    "name": "Battle of Plassey",
+                    "period": "medieval",
+                    "year": "1757 CE",
+                    "location": "Palashi, West Bengal",
+                    "latitude": 23.7957,
+                    "longitude": 88.2434,
+                    "description": "Robert Clive's British forces defeated Siraj-ud-Daula, marking the start of British colonial rule.",
+                    "significance": "Beginning of British Empire in India, leading to 190 years of colonial rule.",
+                    "quiz": {
+                        "question": "The Battle of Plassey marked the beginning of which colonial power's rule in India?",
+                        "options": ["Portuguese", "French", "Dutch", "British"],
+                        "answer": 3
+                    }
+                },
+                {
+                    "id": "revolt_1857",
+                    "name": "Revolt of 1857",
+                    "period": "modern",
+                    "year": "1857 CE",
+                    "location": "Meerut, Delhi, Lucknow",
+                    "latitude": 28.9845,
+                    "longitude": 77.7064,
+                    "description": "First major uprising against British rule, also called India's First War of Independence.",
+                    "significance": "First organized resistance to British colonial rule, involving multiple regions and communities.",
+                    "quiz": {
+                        "question": "The Revolt of 1857 is also known as?",
+                        "options": ["Sepoy Mutiny", "First War of Independence", "Both A and B", "None of these"],
+                        "answer": 2
+                    }
+                },
+                {
+                    "id": "jallianwala_bagh",
+                    "name": "Jallianwala Bagh Massacre",
+                    "period": "modern",
+                    "year": "1919 CE",
+                    "location": "Amritsar, Punjab",
+                    "latitude": 31.6205,
+                    "longitude": 74.8765,
+                    "description": "British troops fired on unarmed civilians, killing hundreds and galvanizing the independence movement.",
+                    "significance": "Turning point that intensified the Indian independence movement and exposed British brutality.",
+                    "quiz": {
+                        "question": "Who was the British officer responsible for the Jallianwala Bagh Massacre?",
+                        "options": ["General Dyer", "Lord Curzon", "Robert Clive", "Warren Hastings"],
+                        "answer": 0
+                    }
+                },
+                {
+                    "id": "salt_march",
+                    "name": "Salt March (Dandi March)",
+                    "period": "modern",
+                    "year": "1930 CE",
+                    "location": "Sabarmati to Dandi, Gujarat",
+                    "latitude": 20.8856,
+                    "longitude": 72.8287,
+                    "description": "Gandhi's 241-mile march to protest British salt monopoly, launching civil disobedience movement.",
+                    "significance": "Iconic act of non-violent resistance that inspired global civil rights movements.",
+                    "quiz": {
+                        "question": "How many miles did Gandhi walk during the Salt March?",
+                        "options": ["200 miles", "241 miles", "300 miles", "180 miles"],
+                        "answer": 1
+                    }
+                }
+            ],
+            "monuments": [
+                {
+                    "id": "taj_mahal",
+                    "name": "Taj Mahal",
+                    "location": "Agra, Uttar Pradesh",
+                    "latitude": 27.173891,
+                    "longitude": 78.042068,
+                    "period": "medieval",
+                    "built": "1632-1653 CE",
+                    "year": "1632-1653 CE",
+                    "description": "Magnificent marble mausoleum built by Shah Jahan for his wife Mumtaz Mahal.",
+                    "significance": "UNESCO World Heritage Site and symbol of eternal love, showcasing Mughal architecture.",
+                    "quiz": {
+                        "question": "Who built the Taj Mahal?",
+                        "options": ["Akbar", "Shah Jahan", "Babur", "Aurangzeb"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "red_fort",
+                    "name": "Red Fort",
+                    "location": "Delhi",
+                    "latitude": 28.6562,
+                    "longitude": 77.2410,
+                    "period": "medieval",
+                    "built": "1639-1648 CE",
+                    "year": "1639-1648 CE",
+                    "description": "Mughal fortified palace serving as the main residence of the Mughal emperors.",
+                    "significance": "Symbol of Indian independence, where the Prime Minister hoists the national flag annually.",
+                    "quiz": {
+                        "question": "The Red Fort is located in which city?",
+                        "options": ["Mumbai", "Delhi", "Kolkata", "Agra"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "qutub_minar",
+                    "name": "Qutub Minar",
+                    "location": "Delhi",
+                    "latitude": 28.5244,
+                    "longitude": 77.1855,
+                    "period": "medieval",
+                    "built": "1193 CE onwards",
+                    "year": "1193 CE onwards",
+                    "description": "73-meter tall victory tower built by Qutub-ud-din Aibak.",
+                    "significance": "Tallest brick minaret in the world and UNESCO World Heritage Site.",
+                    "quiz": {
+                        "question": "Who built the Qutub Minar?",
+                        "options": ["Akbar", "Qutub-ud-din Aibak", "Alauddin Khilji", "Babur"],
+                        "answer": 1
+                    }
+                },
+                {
+                    "id": "hampi",
+                    "name": "Hampi",
+                    "location": "Karnataka",
+                    "latitude": 15.3350,
+                    "longitude": 76.4600,
+                    "period": "medieval",
+                    "built": "14th-16th centuries CE",
+                    "year": "14th-16th centuries CE",
+                    "description": "Ruins of the Vijayanagara Empire capital with stunning boulder landscapes.",
+                    "significance": "UNESCO World Heritage Site showcasing South Indian temple architecture.",
+                    "quiz": {
+                        "question": "Hampi was the capital of which empire?",
+                        "options": ["Mughal Empire", "Maratha Empire", "Vijayanagara Empire", "Chola Empire"],
+                        "answer": 2
+                    }
+                }
+            ]
+        };
+
+        // Application state
+        let currentFilter = 'all';
+        let allEvents = [];
+        let currentQuizEvent = null;
+        let selectedOption = null;
+        let map = null;
+        let markers = [];
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing app...');
+            showLoading(true);
+
+            // Combine events and monuments
+            allEvents = [...historicalData.events, ...historicalData.monuments];
+            console.log('Total events loaded:', allEvents.length);
+
+            // Initialize map
+            initMap();
+
+            // Initialize markers
+            createMarkers();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            showLoading(false);
+
+            // Initial animation
+            animateInitialLoad();
+        });
+
+        function initMap() {
+            // Initialize the map
+            map = L.map('map').setView([22.5, 79], 5);
+            
+            // Add OpenStreetMap tiles
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            
+            // Add a subtle India outline for better context
+            // This is a simplified polygon for India's shape
+            const indiaOutline = L.polygon([
+                [37.5, 68], [37.5, 97], [6.5, 97], [6.5, 68]
+            ], {
+                color: 'transparent',
+                fillColor: 'rgba(255, 255, 255, 0.05)',
+                fillOpacity: 0.2,
+                weight: 1
+            }).addTo(map);
+        }
+
+        function showLoading(show) {
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                if (show) {
+                    loadingIndicator.classList.remove('hidden');
+                } else {
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+        }
+
+        function animateInitialLoad() {
+            // Animate elements with staggered delays
+            const elements = document.querySelectorAll('.filter-section, .map-section, .timeline-section');
+            elements.forEach((el, index) => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(30px)';
+
+                setTimeout(() => {
+                    el.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        }
+
+        function setupEventListeners() {
+            console.log('Setting up event listeners...');
+
+            // Period filter buttons
+            const periodButtons = document.querySelectorAll('.period-btn');
+            periodButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    console.log('Period button clicked:', e.target.dataset.period);
+                    const period = e.target.dataset.period;
+                    filterByPeriod(period);
+
+                    // Update active state
+                    periodButtons.forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                });
+            });
+
+            // Search functionality
+            const searchBtn = document.getElementById('searchBtn');
+            const searchInput = document.getElementById('searchInput');
+
+            if (searchBtn) {
+                searchBtn.addEventListener('click', performSearch);
+            }
+
+            if (searchInput) {
+                searchInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        performSearch();
+                    }
+                });
+            }
+
+            // Reset view
+            const resetBtn = document.getElementById('resetView');
+            if (resetBtn) {
+                resetBtn.addEventListener('click', resetView);
+            }
+
+            // Timeline slider
+            const timelineRange = document.getElementById('timelineRange');
+            if (timelineRange) {
+                timelineRange.addEventListener('input', handleTimelineChange);
+            }
+
+            // Event panel close
+            const closePanel = document.getElementById('closePanel');
+            if (closePanel) {
+                closePanel.addEventListener('click', closeEventPanel);
+            }
+
+            // Click outside panel to close
+            const eventPanel = document.getElementById('eventPanel');
+            if (eventPanel) {
+                eventPanel.addEventListener('click', (e) => {
+                    if (e.target === eventPanel) {
+                        closeEventPanel();
+                    }
+                });
+            }
+
+            // ESC key to close panel
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && eventPanel && !eventPanel.classList.contains('hidden')) {
+                    closeEventPanel();
+                }
+            });
+        }
+
+        function createMarkers() {
+            console.log('Creating markers...');
+            
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
+
+            allEvents.forEach((event, index) => {
+                const marker = createMarker(event);
+                markers.push(marker);
+                
+                // Add to map
+                marker.addTo(map);
+            });
+
+            console.log('Markers created:', markers.length);
+        }
+
+        function createMarker(event) {
+            // Determine marker color based on period
+            let markerColor;
+            switch(event.period) {
+                case 'ancient':
+                    markerColor = '#8B4513'; // Brown
+                    break;
+                case 'medieval':
+                    markerColor = '#B8860B'; // Dark Goldenrod
+                    break;
+                case 'modern':
+                    markerColor = '#228B22'; // Forest Green
+                    break;
+                default:
+                    markerColor = '#3388ff'; // Default blue
+            }
+
+            // Create a custom icon
+            const icon = L.divIcon({
+                className: `custom-marker marker-${event.period}`,
+                html: `<div style="background-color: ${markerColor}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+
+            // Create the marker
+            const marker = L.marker([event.latitude, event.longitude], { icon: icon });
+            
+            // Bind popup with basic info
+            marker.bindPopup(`
+                <div class="popup-content">
+                    <h3>${event.name}</h3>
+                    <p><strong>Period:</strong> ${historicalData.periods.find(p => p.id === event.period).name}</p>
+                    <p><strong>Year:</strong> ${event.year || event.built}</p>
+                    <p><strong>Location:</strong> ${event.location}</p>
+                    <button class="btn btn--primary" onclick="showEventDetails(${JSON.stringify(event).replace(/"/g, '&quot;')})">View Details</button>
+                </div>
+            `);
+            
+            // Add click event to show details panel
+            marker.on('click', function() {
+                showEventDetails(event);
+            });
+
+            return marker;
+        }
+
+        function filterByPeriod(period) {
+            console.log('Filtering by period:', period);
+            currentFilter = period;
+
+            markers.forEach(marker => {
+                // Get the event data from the marker (stored in a custom property)
+                const eventId = marker._icon.classList.contains('marker-ancient') ? 'ancient' : 
+                               marker._icon.classList.contains('marker-medieval') ? 'medieval' : 
+                               marker._icon.classList.contains('marker-modern') ? 'modern' : '';
+                
+                if (period === 'all' || eventId === period) {
+                    map.addLayer(marker);
+                } else {
+                    map.removeLayer(marker);
+                }
+            });
+
+            // Update timeline position based on period
+            updateTimelineForPeriod(period);
+        }
+
+        function updateTimelineForPeriod(period) {
+            const periodMap = {
+                'ancient': 25,
+                'medieval': 65,
+                'modern': 90,
+                'all': 100
+            };
+
+            const value = periodMap[period] || 100;
+            const timelineRange = document.getElementById('timelineRange');
+            if (timelineRange) {
+                timelineRange.value = value;
+            }
+        }
+
+        function performSearch() {
+            const searchInput = document.getElementById('searchInput');
+            if (!searchInput) return;
+
+            const query = searchInput.value.toLowerCase().trim();
+            console.log('Performing search:', query);
+
+            if (!query) {
+                resetView();
+                return;
+            }
+
+            const matchingEvents = allEvents.filter(event =>
+                event.name.toLowerCase().includes(query) ||
+                event.location.toLowerCase().includes(query) ||
+                event.description.toLowerCase().includes(query)
+            );
+
+            console.log('Matching events:', matchingEvents.length);
+
+            // Hide all markers first
+            markers.forEach(marker => {
+                map.removeLayer(marker);
+            });
+
+            // Show matching markers and zoom to them
+            if (matchingEvents.length > 0) {
+                const group = new L.featureGroup();
+                
+                matchingEvents.forEach(event => {
+                    const marker = markers.find(m => {
+                        const latLng = m.getLatLng();
+                        return latLng.lat === event.latitude && latLng.lng === event.longitude;
+                    });
+                    
+                    if (marker) {
+                        map.addLayer(marker);
+                        group.addLayer(marker);
+                        
+                        // Highlight with animation
+                        marker._icon.style.animation = 'markerPulse 1s ease-in-out 3';
+                    }
+                });
+                
+                // Zoom to show all matching markers
+                map.fitBounds(group.getBounds(), { padding: [50, 50] });
+            }
+
+            // Show notification
+            if (matchingEvents.length === 0) {
+                showNotification('No events found for your search.');
+            } else {
+                showNotification(`Found ${matchingEvents.length} event(s)`);
+            }
+        }
+
+        function resetView() {
+            console.log('Resetting view...');
+            currentFilter = 'all';
+
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+            }
+
+            // Reset period buttons
+            const periodButtons = document.querySelectorAll('.period-btn');
+            periodButtons.forEach(btn => btn.classList.remove('active'));
+            const allPeriodsBtn = document.querySelector('[data-period="all"]');
+            if (allPeriodsBtn) {
+                allPeriodsBtn.classList.add('active');
+            }
+
+            // Show all markers
+            markers.forEach(marker => {
+                map.addLayer(marker);
+                marker._icon.style.animation = '';
+            });
+
+            // Reset map view
+            map.setView([22.5, 79], 5);
+
+            // Reset timeline
+            const timelineRange = document.getElementById('timelineRange');
+            if (timelineRange) {
+                timelineRange.value = 100;
+            }
+
+            closeEventPanel();
+        }
+
+        function handleTimelineChange(e) {
+            const value = parseInt(e.target.value);
+            console.log('Timeline changed:', value);
+
+            // Map timeline value to periods
+            let period = 'all';
+            if (value <= 33) period = 'ancient';
+            else if (value <= 66) period = 'medieval';
+            else if (value <= 90) period = 'modern';
+
+            console.log('Timeline mapped to period:', period);
+
+            // Update period filter
+            if (period !== currentFilter) {
+                filterByPeriod(period);
+
+                // Update active button
+                const periodButtons = document.querySelectorAll('.period-btn');
+                periodButtons.forEach(btn => btn.classList.remove('active'));
+                const activeBtn = document.querySelector(`[data-period="${period}"]`);
+                if (activeBtn) activeBtn.classList.add('active');
+            }
+        }
+
+        function showEventDetails(event) {
+            console.log('Showing event details:', event.name);
+            currentQuizEvent = event;
+            selectedOption = null;
+
+            const eventPanel = document.getElementById('eventPanel');
+            if (!eventPanel) {
+                console.error('Event panel not found');
+                return;
+            }
+
+            // Populate panel content
+            const eventTitle = document.getElementById('eventTitle');
+            const eventYear = document.getElementById('eventYear');
+            const eventLocation = document.getElementById('eventLocation');
+            const eventDescription = document.getElementById('eventDescription');
+            const eventSignificance = document.getElementById('eventSignificance');
+
+            if (eventTitle) eventTitle.textContent = event.name;
+            if (eventYear) eventYear.textContent = event.year || event.built;
+            if (eventLocation) eventLocation.textContent = event.location;
+            if (eventDescription) eventDescription.textContent = event.description;
+            if (eventSignificance) eventSignificance.textContent = event.significance;
+
+            // Handle image
+            const imageContainer = document.getElementById('eventImage');
+            if (imageContainer) {
+                imageContainer.innerHTML = '';
+                if (event.image) {
+                    const img = document.createElement('img');
+                    img.src = event.image;
+                    img.alt = event.name;
+                    img.onerror = () => {
+                        imageContainer.innerHTML = '<div class="no-image">No image available</div>';
+                    };
+                    imageContainer.appendChild(img);
+                } else {
+                    imageContainer.innerHTML = '<div class="no-image">No image available</div>';
+                }
+            }
+
+            // Setup quiz if available
+            const eventQuiz = document.getElementById('eventQuiz');
+            if (event.quiz && eventQuiz) {
+                setupQuiz(event.quiz);
+                eventQuiz.classList.remove('hidden');
+            } else if (eventQuiz) {
+                eventQuiz.classList.add('hidden');
+            }
+
+            // Show panel with animation
+            eventPanel.classList.remove('hidden');
+            setTimeout(() => {
+                eventPanel.classList.add('visible');
+            }, 10);
+        }
+
+        function setupQuiz(quiz) {
+            console.log('Setting up quiz:', quiz.question);
+
+            const quizQuestion = document.getElementById('quizQuestion');
+            if (quizQuestion) {
+                quizQuestion.textContent = quiz.question;
+            }
+
+            const optionsContainer = document.getElementById('quizOptions');
+            if (!optionsContainer) return;
+
+            optionsContainer.innerHTML = '';
+            selectedOption = null;
+
+            quiz.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'quiz-option';
+                optionElement.textContent = option;
+                optionElement.dataset.index = index;
+
+                optionElement.addEventListener('click', () => selectQuizOption(optionElement, index));
+
+                optionsContainer.appendChild(optionElement);
+            });
+
+            // Setup submit button
+            const submitBtn = document.getElementById('quizSubmit');
+            if (submitBtn) {
+                submitBtn.classList.add('hidden');
+                submitBtn.onclick = () => submitQuizAnswer(quiz);
+            }
+
+            // Reset quiz state
+            const quizResult = document.getElementById('quizResult');
+            if (quizResult) {
+                quizResult.classList.add('hidden');
+            }
+        }
+
+        function selectQuizOption(optionElement, index) {
+            console.log('Quiz option selected:', index);
+            selectedOption = index;
+
+            // Remove previous selections
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+
+            // Select current option
+            optionElement.classList.add('selected');
+
+            // Show submit button
+            const submitBtn = document.getElementById('quizSubmit');
+            if (submitBtn) {
+                submitBtn.classList.remove('hidden');
+            }
+        }
+
+        function submitQuizAnswer(quiz) {
+            console.log('Submitting quiz answer:', selectedOption);
+
+            if (selectedOption === null) return;
+
+            const isCorrect = selectedOption === quiz.answer;
+
+            // Show result
+            const resultElement = document.getElementById('quizResult');
+            if (resultElement) {
+                resultElement.classList.remove('hidden', 'correct', 'incorrect');
+                resultElement.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+                if (isCorrect) {
+                    resultElement.textContent = 'Correct! Well done!';
+                } else {
+                    resultElement.textContent = `Incorrect. The correct answer is: ${quiz.options[quiz.answer]}`;
+                }
+            }
+
+            // Style all options to show correct/incorrect
+            document.querySelectorAll('.quiz-option').forEach((opt, index) => {
+                opt.classList.remove('correct', 'incorrect');
+                if (index === quiz.answer) {
+                    opt.classList.add('correct');
+                } else if (index === selectedOption) {
+                    opt.classList.add('incorrect');
+                }
+                // Disable further clicking
+                opt.style.pointerEvents = 'none';
+            });
+
+            // Hide submit button
+            const submitBtn = document.getElementById('quizSubmit');
+            if (submitBtn) {
+                submitBtn.classList.add('hidden');
+            }
+        }
+
+        function closeEventPanel() {
+            console.log('Closing event panel');
+            const eventPanel = document.getElementById('eventPanel');
+            if (eventPanel) {
+                eventPanel.classList.remove('visible');
+                setTimeout(() => {
+                    eventPanel.classList.add('hidden');
+                }, 300);
+            }
+        }
+
+        function showNotification(message) {
+            console.log('Showing notification:', message);
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 20px;
+                background: var(--accent-orange);
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                z-index: 1001;
+                font-weight: 500;
+                transform: translateX(100%);
+                transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            `;
+
+            document.body.appendChild(notification);
+
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+
+            // Remove after delay
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+
+        // Make functions available globally for the popup buttons
+        window.showEventDetails = showEventDetails;
+    </script>
+</body>
+</html>
